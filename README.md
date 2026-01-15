@@ -1,6 +1,12 @@
 # From Casual Rides to Committed Members  
 **Translating Bike-Share Usage Patterns into Marketing Decisions**
 
+## Quick Summary
+- **Goal:** Identify how casual riders and annual members use Cyclistic bikes differently and recommend ways to convert casual riders into members.
+- **Approach:** Cleaned and merged trip data, created ride length + weekday features, and compared usage patterns by user type.
+- **Outcome:** Clear behavioral differences emerged that support targeted conversion campaigns.
+
+
 ## Project Overview
 Cyclistic is a bike-share company seeking to grow its base of annual members. While casual riders already demonstrate engagement with the product, the business challenge is understanding *how* their usage differs from members—and what those differences reveal about conversion opportunities.
 
