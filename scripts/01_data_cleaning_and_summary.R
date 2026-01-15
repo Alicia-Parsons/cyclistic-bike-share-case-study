@@ -1,61 +1,62 @@
 # Cyclistic Case Study (Divvy)
-# 01 - Analysis Summary + Export (by day of week)
+# 01 - Data Cleaning + Summary Outputs (for visuals)
 # Author: Alicia Parsons
 #
-# NOTE:
-# This script assumes raw data has already been imported, standardized,
-# and merged into a single dataset.
+# Prereq:
 # Run scripts/00_import_and_merge.R first to generate:
 # data_clean/divvy_2019_2020_clean.csv
 
 library(tidyverse)
 library(lubridate)
 
-# -------------------------
-# Load cleaned, merged dataset
-# -------------------------
-# IMPORTANT: In Posit Cloud, your working directory is typically the project root,
-# so use this path (no leading ../)
+# ---- Load cleaned, merged dataset ----
 divvy <- read_csv("data_clean/divvy_2019_2020_clean.csv", show_col_types = FALSE)
 
-# -------------------------
-# Light-touch validation (no heavy transformations)
-# -------------------------
-# Ensure expected member categories only
-divvy <- divvy %>%
-  mutate(
-    member_casual = as.character(member_casual)
-  ) %>%
-  filter(member_casual %in% c("member", "casual"))
+# ---- Sanity check: membership labels should already be normalized ----
+member_levels <- sort(unique(divvy$member_casual))
+cat("Member types found:", paste(member_levels, collapse = ", "), "\n")
 
-# If started_at/ended_at are already POSIXct from script 00, this is harmless.
-# If they came in as character, this fixes them.
+# If anything besides member/casual appears, stop here (prevents bad visuals)
+stopifnot(all(member_levels %in% c("member", "casual")))
+
+# ---- Ensure datetime fields are parsed (quietly) ----
+# (00 script already does this, but this makes 01 robust if file is reloaded later)
 divvy <- divvy %>%
   mutate(
     started_at = ymd_hms(started_at, quiet = TRUE),
     ended_at   = ymd_hms(ended_at, quiet = TRUE)
   )
 
-# Ensure ride_length/day_of_week exist (script 00 creates them, but we keep this robust)
-divvy <- divvy %>%
-  mutate(
-    ride_length = if_else(
-      is.na(ride_length),
-      as.numeric(difftime(ended_at, started_at, units = "mins")),
-      ride_length
-    ),
-    # week_start = 1 makes Monday the first day (matches typical business view)
-    day_of_week = if_else(
-      is.na(day_of_week),
-      as.character(wday(started_at, label = TRUE, abbr = TRUE, week_start = 1)),
-      as.character(day_of_week)
-    )
-  ) %>%
-  filter(!is.na(ride_length), ride_length > 0, !is.na(day_of_week))
+# ---- Ensure ride_length exists; compute only if missing ----
+if (!("ride_length" %in% names(divvy))) {
+  divvy <- divvy %>%
+    mutate(ride_length = as.numeric(difftime(ended_at, started_at, units = "mins")))
+}
 
-# -------------------------
-# Summarize usage patterns by rider type and weekday
-# -------------------------
+# ---- Ensure day_of_week exists; compute only if missing ----
+if (!("day_of_week" %in% names(divvy))) {
+  divvy <- divvy %>%
+    mutate(day_of_week = wday(started_at, label = TRUE, abbr = TRUE, week_start = 1))
+}
+
+# ---- Light cleanup (protect analysis) ----
+divvy <- divvy %>%
+  filter(
+    !is.na(started_at),
+    !is.na(ended_at),
+    !is.na(ride_length),
+    ride_length > 0
+  )
+
+# ---- Force weekday order (Mon -> Sun) for cleaner visuals ----
+divvy <- divvy %>%
+  mutate(day_of_week = factor(
+    day_of_week,
+    levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+    ordered = TRUE
+  ))
+
+# ---- Summary 1: by rider type x weekday ----
 by_day <- divvy %>%
   group_by(member_casual, day_of_week) %>%
   summarise(
@@ -64,28 +65,16 @@ by_day <- divvy %>%
     .groups = "drop"
   )
 
-# Optional: order weekdays nicely (Mon -> Sun) for plots/tables
-by_day <- by_day %>%
-  mutate(
-    day_of_week = factor(
-      day_of_week,
-      levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    )
-  ) %>%
-  arrange(member_casual, day_of_week)
-
-# -------------------------
-# Export summary for plotting (small + memory friendly)
-# -------------------------
+# ---- Export summary files for visuals / GitHub ----
 dir.create("data_clean", showWarnings = FALSE)
+
 write_csv(by_day, "data_clean/by_day_summary.csv")
 
-cat("Saved summary file: data_clean/by_day_summary.csv\n")
-cat("Rows in by_day:", nrow(by_day), "\n")
-cat("Member categories:", paste(sort(unique(by_day$member_casual)), collapse = ", "), "\n")
+# Optional: a second summary that some templates use (kept for flexibility)
+write_csv(by_day, "data_clean/divvy_summary_by_day.csv")
 
-# -------------------------
-# Memory cleanup (important in Posit Cloud)
-# -------------------------
+cat("Wrote: data_clean/by_day_summary.csv\n")
+
+# ---- Memory cleanup (Posit Cloud friendly) ----
 rm(divvy)
 gc()
