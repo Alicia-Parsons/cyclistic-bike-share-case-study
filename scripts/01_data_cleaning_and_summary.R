@@ -1,3 +1,7 @@
+# NOTE:
+# This script assumes a cleaned, merged dataset has already been created.
+# See scripts/00_import_and_merge.R for raw data ingestion and standardization.
+
 # Cyclistic Case Study
 # Data Cleaning and Feature Engineering
 # Author: Alicia Parsons
