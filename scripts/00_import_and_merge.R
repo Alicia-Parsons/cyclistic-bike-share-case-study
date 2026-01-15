@@ -38,11 +38,15 @@ divvy_2019 <- divvy_2019_raw %>%
     member_casual = usertype
   ) %>%
   mutate(
+    # Ensure consistent types across years
+    ride_id = as.character(ride_id),
+
     # 2019 doesn't include rideable_type; keep for schema consistency
     rideable_type = NA_character_,
+
     start_station_id = as.character(start_station_id),
     end_station_id   = as.character(end_station_id),
-    member_casual = as.character(member_casual)
+    member_casual    = as.character(member_casual)
   ) %>%
   select(
     ride_id, rideable_type,
@@ -57,8 +61,12 @@ divvy_2019 <- divvy_2019_raw %>%
 # -------------------------
 divvy_2020 <- divvy_2020_raw %>%
   mutate(
+    # Ensure consistent types across years
+    ride_id = as.character(ride_id),
+
     start_station_id = as.character(start_station_id),
-    end_station_id   = as.character(end_station_id)
+    end_station_id   = as.character(end_station_id),
+    member_casual    = as.character(member_casual)
   ) %>%
   select(
     ride_id, rideable_type,
@@ -72,10 +80,19 @@ divvy_2020 <- divvy_2020_raw %>%
 # Merge + feature engineering
 # -------------------------
 divvy <- bind_rows(divvy_2019, divvy_2020) %>%
+  # Standardize rider type labels across older/newer schema
+  mutate(
+    member_casual = case_when(
+      member_casual %in% c("Subscriber", "member") ~ "member",
+      member_casual %in% c("Customer", "casual")   ~ "casual",
+      TRUE ~ member_casual
+    )
+  ) %>%
   mutate(
     started_at = ymd_hms(started_at, quiet = TRUE),
     ended_at   = ymd_hms(ended_at, quiet = TRUE),
     ride_length = as.numeric(difftime(ended_at, started_at, units = "mins")),
+    # week_start = 1 sets Monday as the first day of the week
     day_of_week = wday(started_at, label = TRUE, abbr = TRUE, week_start = 1)
   ) %>%
   # remove rows that would distort analysis
@@ -84,7 +101,8 @@ divvy <- bind_rows(divvy_2019, divvy_2020) %>%
     !is.na(ended_at),
     !is.na(ride_length),
     ride_length > 0,
-    !is.na(member_casual)
+    !is.na(member_casual),
+    member_casual %in% c("member", "casual")
   )
 
 # -------------------------
@@ -96,6 +114,11 @@ write_csv(divvy, "data_clean/divvy_2019_2020_clean.csv")
 # Quick sanity prints (optional)
 cat("Merged rows exported:", nrow(divvy), "\n")
 cat("Columns exported:", paste(names(divvy), collapse = ", "), "\n")
+cat("Member categories:", paste(sort(unique(divvy$member_casual)), collapse = ", "), "\n")
+
+# Memory cleanup (helpful in Posit Cloud)
+rm(divvy_2019_raw, divvy_2020_raw, divvy_2019, divvy_2020)
+gc()
 
 # Memory cleanup (helpful in Posit Cloud)
 rm(divvy_2019_raw, divvy_2020_raw, divvy_2019, divvy_2020)
