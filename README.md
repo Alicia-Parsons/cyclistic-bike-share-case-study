@@ -43,6 +43,7 @@ These public datasets, provided by Motivate International Inc., are used as a pr
 
 ## Data Preparation & Analytical Decisions
 The datasets required careful preparation before analysis due to structural differences across years.
+A curated R script illustrating key data cleaning and feature engineering steps is included in the `scripts/` folder.
 
 Key decisions included:
 - Standardizing column names between the 2019 and 2020 datasets  
