@@ -59,6 +59,17 @@ These patterns suggest two distinct usage modes: routine, purpose-driven travel 
 
 ---
 
+## Deliverables
+
+📄 **Written Case Study Report**  
+- [Word Document](reports/Cyclistic_Case_Study_Analysis.docx)
+
+📊 **Executive Summary Presentation**  
+- [View PDF](slides/Cyclistic_Case_Study_Executive_Summary.pdf)  
+- [Download PPTX](slides/Cyclistic_Case_Study_Executive_Summary.pptx)
+
+---
+
 ## Visual Highlights
 *(Visuals included in the repository and presentation)*
 
