@@ -1,10 +1,14 @@
-# NOTE:
-# This script assumes a cleaned, merged dataset has already been created.
-# See scripts/00_import_and_merge.R for raw data ingestion and standardization.
-
 # Cyclistic Case Study
 # Data Cleaning and Feature Engineering
 # Author: Alicia Parsons
+
+# NOTE:
+# This script assumes the raw data has already been imported, standardized,
+# and merged into a single dataset.
+# Run scripts/00_import_and_merge.R first to generate:
+# data_clean/divvy_2019_2020_clean.csv
+
+
 
 library(tidyverse)
 library(lubridate)
