@@ -33,6 +33,15 @@ This analysis examines historical trip data to identify behavioral patterns betw
 These public datasets, provided by Motivate International Inc., are used as a proxy for Cyclistic’s historical trip data. Personally identifiable rider information is excluded to ensure privacy.
 
 ---
+## Data Standardization Notes
+Divvy datasets differ across years. Older data uses `Subscriber`/`Customer`, while newer data uses `member`/`casual`.
+For consistency, rider types were standardized to two categories:
+- Subscriber → member
+- Customer → casual
+
+Ride IDs were coerced to character type to prevent merge issues across files.
+
+---
 
 ## Tools & Technologies
 - R (Posit Cloud)
