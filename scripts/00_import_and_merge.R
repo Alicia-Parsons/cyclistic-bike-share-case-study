@@ -25,26 +25,24 @@ divvy_2020_raw <- read_csv(path_2020, show_col_types = FALSE)
 # -------------------------
 # Standardize 2019 schema to match 2020-style fields
 # -------------------------
-# Common fields we want across both:
-# ride_id, rideable_type, started_at, ended_at, start_station_name, start_station_id,
-# end_station_name, end_station_id, member_casual
-
+# 2019 columns: trip_id, start_time, end_time, from_station_name/id, to_station_name/id, usertype
 divvy_2019 <- divvy_2019_raw %>%
   rename(
     ride_id = trip_id,
-    started_at = started_at,
-    ended_at = ended_at,
-    start_station_name = start_station_name,
-    start_station_id = start_station_id,
-    end_station_name = end_station_name,
-    end_station_id = end_station_id,
+    started_at = start_time,
+    ended_at = end_time,
+    start_station_name = from_station_name,
+    start_station_id = from_station_id,
+    end_station_name = to_station_name,
+    end_station_id = to_station_id,
     member_casual = usertype
   ) %>%
   mutate(
-    # 2019 may not include rideable_type; keep for schema consistency
-    rideable_type = if ("rideable_type" %in% names(.)) rideable_type else NA_character_,
+    # 2019 doesn't include rideable_type; keep for schema consistency
+    rideable_type = NA_character_,
     start_station_id = as.character(start_station_id),
-    end_station_id   = as.character(end_station_id)
+    end_station_id   = as.character(end_station_id),
+    member_casual = as.character(member_casual)
   ) %>%
   select(
     ride_id, rideable_type,
@@ -78,7 +76,7 @@ divvy <- bind_rows(divvy_2019, divvy_2020) %>%
     started_at = ymd_hms(started_at, quiet = TRUE),
     ended_at   = ymd_hms(ended_at, quiet = TRUE),
     ride_length = as.numeric(difftime(ended_at, started_at, units = "mins")),
-    day_of_week = wday(started_at, label = TRUE, abbr = TRUE)
+    day_of_week = wday(started_at, label = TRUE, abbr = TRUE, week_start = 1)
   ) %>%
   # remove rows that would distort analysis
   filter(
